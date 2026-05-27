@@ -11,7 +11,7 @@ const StudentDashboard = ({ user, onSelect, onLogout }) => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/admin/leaderboard');
+        const response = await fetch('/api/admin/leaderboard');
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         
@@ -21,7 +21,29 @@ const StudentDashboard = ({ user, onSelect, onLogout }) => {
           id: item.studentId
         }));
         
-        const sorted = formattedData.sort((a, b) => b.score - a.score);
+        const localLb = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+        const mergedMap = new Map();
+        
+        localLb.forEach(item => {
+          const key = item.email ? item.email.toLowerCase() : String(item.id);
+          mergedMap.set(key, item);
+        });
+        
+        formattedData.forEach(item => {
+          const key = item.email ? item.email.toLowerCase() : String(item.id);
+          const existing = mergedMap.get(key);
+          if (existing) {
+            mergedMap.set(key, {
+              ...existing,
+              ...item,
+              score: Math.max(existing.score, item.score)
+            });
+          } else {
+            mergedMap.set(key, item);
+          }
+        });
+        
+        const sorted = Array.from(mergedMap.values()).sort((a, b) => b.score - a.score);
         setLeaderboard(sorted);
         setMyRank(sorted.findIndex(s => String(s.id) === String(user.id)) + 1 || null);
         setMyData(sorted.find(s => String(s.id) === String(user.id)) || null);
@@ -100,9 +122,9 @@ const StudentDashboard = ({ user, onSelect, onLogout }) => {
             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #6366f1, #c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px' }}>
               {user.name.charAt(0)}
             </div>
-            <div style={{ overflow: 'hidden' }}>
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: '700', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user.name}</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user.email}</p>
+            <div style={{ overflow: 'hidden', minWidth: 0, flex: 1 }}>
+              <p title={user.name} style={{ margin: 0, fontSize: '14px', fontWeight: '700', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user.name}</p>
+              <p title={user.email} style={{ margin: 0, fontSize: '12px', color: '#64748b', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user.email}</p>
             </div>
           </div>
           <button onClick={onLogout} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #475569', background: 'transparent', color: '#94a3b8', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}

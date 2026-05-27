@@ -25,13 +25,45 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const fetchData = async () => {
     try {
-      const res1 = await axios.get('http://localhost:8080/api/admin/students');
-      setStudents(res1.data);
-      const res2 = await axios.get('http://localhost:8080/api/admin/leaderboard');
-      const formattedLb = res2.data.map(item => ({ ...item, id: item.studentId }));
-      setLeaderboard(formattedLb);
-    } catch {
-      console.warn('Backend unreachable. Falling back to local storage.');
+      const res1 = await axios.get('/api/admin/students');
+      const backendStudents = res1.data;
+      setStudents(backendStudents);
+
+      const res2 = await axios.get('/api/admin/leaderboard');
+      const backendLb = res2.data.map(item => ({ ...item, id: item.studentId }));
+
+      const localLb = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+      const mergedMap = new Map();
+
+      localLb.forEach(item => {
+        const key = item.email ? item.email.toLowerCase() : String(item.id);
+        mergedMap.set(key, item);
+      });
+
+      backendLb.forEach(item => {
+        const studentDetails = backendStudents.find(s => String(s.id) === String(item.id));
+        const email = item.email || (studentDetails ? studentDetails.email : '');
+        const key = email ? email.toLowerCase() : String(item.id);
+
+        const existing = mergedMap.get(key);
+        if (existing) {
+          mergedMap.set(key, {
+            ...existing,
+            ...item,
+            score: Math.max(existing.score, item.score)
+          });
+        } else {
+          mergedMap.set(key, {
+            ...item,
+            email: email
+          });
+        }
+      });
+
+      const mergedLb = Array.from(mergedMap.values()).sort((a, b) => b.score - a.score);
+      setLeaderboard(mergedLb);
+    } catch (err) {
+      console.warn('Backend unreachable. Falling back to local storage.', err);
       setStudents(JSON.parse(localStorage.getItem('exam_users') || '[]'));
       setLeaderboard(JSON.parse(localStorage.getItem('leaderboard') || '[]'));
     }
@@ -127,7 +159,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #334155' }}>
-                    {['Name', 'Email', 'Role', 'Status'].map(h => (
+                    {['ID', 'Name', 'Email', 'Role', 'Status', 'Actions'].map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '12px', color: '#94a3b8', fontSize: '13px' }}>{h}</th>
                     ))}
                   </tr>
@@ -135,6 +167,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                 <tbody>
                   {students.map(s => (
                     <tr key={s.id} style={{ borderBottom: '1px solid #1e293b' }}>
+                      <td style={{ padding: '14px', color: '#818cf8', fontWeight: 'bold' }}>{s.id}</td>
                       <td style={{ padding: '14px', fontWeight: '600', color: '#e2e8f0' }}>{s.name}</td>
                       <td style={{ padding: '14px', color: '#94a3b8' }}>{s.email}</td>
                       <td style={{ padding: '14px', fontSize: '12px' }}><span style={{ padding: '2px 8px', borderRadius: '4px', background: '#0f172a', color: '#818cf8' }}>{s.role || 'STUDENT'}</span></td>
@@ -143,6 +176,30 @@ const AdminDashboard = ({ user, onLogout }) => {
                           <span style={{ color: '#10b981', fontSize: '12px' }}>● Taking {localStorage.getItem('active_exam_user_' + s.id)}</span> : 
                           <span style={{ color: '#475569', fontSize: '12px' }}>Inactive</span>
                         }
+                      </td>
+                      <td style={{ padding: '14px' }}>
+                        <button 
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete student "${s.name}"?`)) {
+                              handleDelete(s.id);
+                            }
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: '#ef4444',
+                            color: '#fff',
+                            fontWeight: '600',
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            transition: 'opacity 0.2s'
+                          }}
+                          onMouseEnter={e => e.target.style.opacity = 0.8}
+                          onMouseLeave={e => e.target.style.opacity = 1}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -195,22 +252,64 @@ const AdminDashboard = ({ user, onLogout }) => {
         {tab === 'leaderboard' && (
           <div style={{ background: '#1e293b', borderRadius: '16px', padding: '24px', border: '1px solid #334155' }}>
             <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#e2e8f0' }}>🏆 Overall Cumulative Leaderboard</h2>
-            {(() => {
-              return [...leaderboard].sort((a,b) => b.score - a.score).map((entry, i) => (
-                <div key={entry.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: '10px', marginBottom: '8px', background: '#0f172a' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <span style={{ fontSize: '20px', fontWeight: '800', width: '30px', color: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7f32' : '#64748b' }}>
-                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
-                    </span>
-                    <div>
-                      <span style={{ fontWeight: '600', color: '#e2e8f0' }}>{entry.name}</span>
-                      <div style={{ fontSize: '11px', color: '#64748b' }}>Best scores: {entry.topicScores ? Object.keys(entry.topicScores).length : (entry.score > 0 ? 'Multiple' : 0)} topics</div>
-                    </div>
-                  </div>
-                  <span style={{ fontWeight: '700', fontSize: '18px', color: '#818cf8' }}>{entry.score}</span>
-                </div>
-              ));
-            })()}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(15, 23, 42, 0.5)', borderBottom: '1px solid #334155' }}>
+                    <th style={{ padding: '14px', fontSize: '13px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>Rank</th>
+                    <th style={{ padding: '14px', fontSize: '13px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>Student ID</th>
+                    <th style={{ padding: '14px', fontSize: '13px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>User Details</th>
+                    <th style={{ padding: '14px', fontSize: '13px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' }}>Best per Topic</th>
+                    <th style={{ padding: '14px', fontSize: '13px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', textAlign: 'right' }}>Overall Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...leaderboard].sort((a,b) => b.score - a.score).map((entry, i) => {
+                    const studentDetails = students.find(s => String(s.id) === String(entry.id));
+                    const email = entry.email || (studentDetails ? studentDetails.email : 'N/A');
+
+                    return (
+                      <tr key={entry.id} style={{ borderBottom: '1px solid #1e293b' }}>
+                        <td style={{ padding: '14px' }}>
+                          <span style={{ 
+                            fontSize: '18px', fontWeight: '800', 
+                            color: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7f32' : '#64748b'
+                          }}>
+                            {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px', color: '#818cf8', fontWeight: 'bold' }}>{entry.id}</td>
+                        <td style={{ padding: '14px' }}>
+                          <div>
+                            <div style={{ fontWeight: '700', color: '#e2e8f0' }}>{entry.name || `Student ${entry.id}`}</div>
+                            <div style={{ fontSize: '12px', color: '#64748b' }}>{email}</div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px' }}>
+                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                            {entry.topicScores ? Object.entries(entry.topicScores).map(([topic, score]) => (
+                              <span key={topic} title={`${topic}: ${score}`} style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '6px', background: '#0f172a', border: '1px solid #334155', color: '#94a3b8' }}>
+                                {topic}:{score}
+                              </span>
+                            )) : <span style={{ color: '#475569', fontSize: '12px' }}>{entry.score > 0 ? 'Cumulative score' : 'No topics'}</span>}
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px', textAlign: 'right' }}>
+                          <span style={{ fontSize: '18px', fontWeight: '900', color: '#818cf8' }}>{entry.score}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {leaderboard.length === 0 && (
+                    <tr>
+                      <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+                        No users on the leaderboard yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

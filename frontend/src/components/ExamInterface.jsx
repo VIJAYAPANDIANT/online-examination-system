@@ -50,7 +50,7 @@ const ExamInterface = ({ user, topic, onComplete, onExit }) => {
 
     // Persist submission to backend database for global leaderboard
     try {
-      await fetch('http://localhost:8080/api/exam/submit', {
+      await fetch('/api/exam/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

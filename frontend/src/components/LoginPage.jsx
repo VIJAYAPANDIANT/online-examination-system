@@ -9,7 +9,7 @@ const LoginPage = ({ onLogin }) => {
   const [name, setName] = useState('');
 
   // ── Helpers: read/write session data ──────────
-  const API_BASE_URL = 'http://localhost:8080/api/auth';
+  const API_BASE_URL = '/api/auth';
 
   const getStoredUsers = () => {
     try { return JSON.parse(localStorage.getItem('exam_users') || '[]'); }
@@ -141,7 +141,29 @@ const LoginPage = ({ onLogin }) => {
           const allUsers = getStoredUsers();
           const found = allUsers.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
           if (found) {
-            console.warn('Backend login failed, but user found in local storage. Logging in locally.');
+            console.warn('Backend login failed, but user found in local storage. Attempting auto-registration to backend.');
+            try {
+              const regResponse = await fetch(`${API_BASE_URL}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: found.name, email: cleanEmail, password: password })
+              });
+              if (regResponse.ok) {
+                const regData = await regResponse.json();
+                const safeUser = regData;
+                if (safeUser.email.toLowerCase() === ADMIN_EMAIL) {
+                  safeUser.role = 'ADMIN';
+                }
+                notifyAdmin('User Login (Auto-Synced Offline Account)', safeUser);
+                recordSession(safeUser);
+                onLogin(safeUser);
+                return;
+              }
+            } catch (regErr) {
+              console.error('Failed to auto-register offline user to backend database:', regErr);
+            }
+
+            // Fallback to local offline login if backend registration fails
             const { password: _p, ...safeUser } = found;
             notifyAdmin('User Login (Offline DB Match)', safeUser);
             recordSession(safeUser);

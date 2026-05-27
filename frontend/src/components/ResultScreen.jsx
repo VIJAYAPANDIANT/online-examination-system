@@ -14,13 +14,36 @@ const ResultScreen = ({ user, onBack, onLogout }) => {
     // Fetch Global Leaderboard
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/admin/leaderboard');
+        const response = await fetch('/api/admin/leaderboard');
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         
         // Map backend studentId to id
         const formattedData = data.map(item => ({ ...item, id: item.studentId }));
-        const sorted = formattedData.sort((a, b) => b.score - a.score);
+        
+        const localLb = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+        const mergedMap = new Map();
+        
+        localLb.forEach(item => {
+          const key = item.email ? item.email.toLowerCase() : String(item.id);
+          mergedMap.set(key, item);
+        });
+        
+        formattedData.forEach(item => {
+          const key = item.email ? item.email.toLowerCase() : String(item.id);
+          const existing = mergedMap.get(key);
+          if (existing) {
+            mergedMap.set(key, {
+              ...existing,
+              ...item,
+              score: Math.max(existing.score, item.score)
+            });
+          } else {
+            mergedMap.set(key, item);
+          }
+        });
+        
+        const sorted = Array.from(mergedMap.values()).sort((a, b) => b.score - a.score);
         setLeaderboard(sorted);
       } catch (err) {
         console.warn('Backend leaderboard unreachable. Falling back to local storage.');
