@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import store from '../data/store';
+import { getApiBaseUrl } from '../data/config.js';
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [tab, setTab] = useState('students');
@@ -27,7 +28,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       for (const localUser of storedUsers) {
         let dbId = null;
         try {
-          const regRes = await axios.post('/api/auth/register', {
+          const regRes = await axios.post(getApiBaseUrl() + '/api/auth/register', {
             name: localUser.name,
             email: localUser.email.toLowerCase(),
             password: localUser.password
@@ -36,7 +37,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         } catch (err) {
           if (err.response && err.response.status === 400) {
             try {
-              const loginRes = await axios.post('/api/auth/login', {
+              const loginRes = await axios.post(getApiBaseUrl() + '/api/auth/login', {
                 email: localUser.email.toLowerCase(),
                 password: localUser.password
               });
@@ -56,7 +57,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               for (const res of localResults) {
                 if (res.synced) continue;
                 try {
-                  await axios.post('/api/exam/submit', {
+                  await axios.post(getApiBaseUrl() + '/api/exam/submit', {
                     studentId: dbId,
                     questionId: res.questionId,
                     selectedOption: res.selected
@@ -97,11 +98,11 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const fetchData = async () => {
     try {
-      const res1 = await axios.get('/api/admin/students');
+      const res1 = await axios.get(getApiBaseUrl() + '/api/admin/students');
       const backendStudents = res1.data;
       setStudents(backendStudents);
 
-      const res2 = await axios.get('/api/admin/leaderboard');
+      const res2 = await axios.get(getApiBaseUrl() + '/api/admin/leaderboard');
       const backendLb = res2.data.map(item => ({ ...item, id: item.studentId }));
 
       const localLb = JSON.parse(localStorage.getItem('leaderboard') || '[]');
@@ -168,7 +169,7 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   const handleDelete = async (id) => {
-    try { await axios.delete(`/api/admin/students/${id}`); fetchData(); } catch { alert('Failed'); }
+    try { await axios.delete(getApiBaseUrl() + `/api/admin/students/${id}`); fetchData(); } catch { alert('Failed'); }
   };
 
   const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: '#e2e8f0', fontSize: '14px', marginBottom: '12px' };

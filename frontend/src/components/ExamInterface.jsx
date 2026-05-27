@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import store from '../data/store';
+import { getApiBaseUrl } from '../data/config.js';
 
 const ExamInterface = ({ user, topic, onComplete, onExit }) => {
   const [questions, setQuestions] = useState([]);
@@ -50,7 +51,7 @@ const ExamInterface = ({ user, topic, onComplete, onExit }) => {
 
     // Persist submission to backend database for global leaderboard
     try {
-      await fetch('/api/exam/submit', {
+      await fetch(getApiBaseUrl() + '/api/exam/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getApiBaseUrl } from '../data/config.js';
 
 const ResultScreen = ({ user, onBack, onLogout }) => {
   const [results, setResults] = useState(null);
@@ -14,7 +15,7 @@ const ResultScreen = ({ user, onBack, onLogout }) => {
     // Fetch Global Leaderboard
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch('/api/admin/leaderboard');
+        const response = await fetch(getApiBaseUrl() + '/api/admin/leaderboard');
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         

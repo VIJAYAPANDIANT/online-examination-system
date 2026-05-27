@@ -2,6 +2,7 @@ import TopicSelection from './TopicSelection.jsx';
 import Compiler from './Compiler.jsx';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBaseUrl } from '../data/config.js';
 
 const StudentDashboard = ({ user, onSelect, onLogout }) => {
   const [activeTab, setActiveTab] = useState('tasks');
@@ -17,7 +18,7 @@ const StudentDashboard = ({ user, onSelect, onLogout }) => {
       for (const localUser of storedUsers) {
         let dbId = null;
         try {
-          const regRes = await axios.post('/api/auth/register', {
+          const regRes = await axios.post(getApiBaseUrl() + '/api/auth/register', {
             name: localUser.name,
             email: localUser.email.toLowerCase(),
             password: localUser.password
@@ -26,7 +27,7 @@ const StudentDashboard = ({ user, onSelect, onLogout }) => {
         } catch (err) {
           if (err.response && err.response.status === 400) {
             try {
-              const loginRes = await axios.post('/api/auth/login', {
+              const loginRes = await axios.post(getApiBaseUrl() + '/api/auth/login', {
                 email: localUser.email.toLowerCase(),
                 password: localUser.password
               });
@@ -46,7 +47,7 @@ const StudentDashboard = ({ user, onSelect, onLogout }) => {
               for (const res of localResults) {
                 if (res.synced) continue;
                 try {
-                  await axios.post('/api/exam/submit', {
+                  await axios.post(getApiBaseUrl() + '/api/exam/submit', {
                     studentId: dbId,
                     questionId: res.questionId,
                     selectedOption: res.selected
@@ -80,7 +81,7 @@ const StudentDashboard = ({ user, onSelect, onLogout }) => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch('/api/admin/leaderboard');
+        const response = await fetch(getApiBaseUrl() + '/api/admin/leaderboard');
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         

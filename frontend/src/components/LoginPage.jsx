@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import emailjs from '@emailjs/browser';
+import { getApiBaseUrl } from '../data/config.js';
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -7,9 +8,29 @@ const LoginPage = ({ onLogin }) => {
   const [error, setError] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState('');
+  
+  const [showSettings, setShowSettings] = useState(false);
+  const [backendUrl, setBackendUrl] = useState(localStorage.getItem('exam_backend_url') || '');
+
+  const handleSaveSettings = () => {
+    if (backendUrl.trim()) {
+      localStorage.setItem('exam_backend_url', backendUrl.trim());
+      alert('Backend server URL updated successfully! Refreshing to apply changes...');
+      window.location.reload();
+    } else {
+      handleResetSettings();
+    }
+  };
+
+  const handleResetSettings = () => {
+    localStorage.removeItem('exam_backend_url');
+    setBackendUrl('');
+    alert('Reset to automatic IP detection! Refreshing to apply changes...');
+    window.location.reload();
+  };
 
   // ── Helpers: read/write session data ──────────
-  const API_BASE_URL = '/api/auth';
+  const API_BASE_URL = `${getApiBaseUrl()}/api/auth`;
 
   const getStoredUsers = () => {
     try { return JSON.parse(localStorage.getItem('exam_users') || '[]'); }
@@ -294,6 +315,40 @@ const LoginPage = ({ onLogin }) => {
           <p style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>User Access</p>
           <p style={{ fontSize: '11px', color: '#818cf8', fontWeight: '600', marginBottom: '8px' }}>user@gmail.com</p>
           <p style={{ fontSize: '11px', color: '#34d399', fontWeight: '600', marginBottom: '2px' }}>Register your own account to start testing</p>
+        </div>
+
+        <div style={{ marginTop: '16px', textAlign: 'center' }}>
+          <span 
+            onClick={() => setShowSettings(!showSettings)} 
+            style={{ fontSize: '12px', color: '#64748b', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'underline' }}
+          >
+            ⚙️ Connection Settings
+          </span>
+          {showSettings && (
+            <div style={{ marginTop: '12px', padding: '12px', borderRadius: '10px', background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #334155', textAlign: 'left' }}>
+              <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: '600' }}>BACKEND API SERVER URL</label>
+              <input 
+                value={backendUrl} 
+                onChange={e => setBackendUrl(e.target.value)} 
+                placeholder="e.g. http://192.168.1.15:8080" 
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #475569', background: '#0f172a', color: '#e2e8f0', fontSize: '13px', outline: 'none', marginBottom: '8px' }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={handleSaveSettings}
+                  style={{ flex: 1, padding: '6px', borderRadius: '6px', border: 'none', background: '#6366f1', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  Save URL
+                </button>
+                <button 
+                  onClick={handleResetSettings}
+                  style={{ flex: 1, padding: '6px', borderRadius: '6px', border: '1px solid #475569', background: 'transparent', color: '#94a3b8', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}
+                >
+                  Auto-detect
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
