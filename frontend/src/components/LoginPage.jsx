@@ -91,11 +91,35 @@ const LoginPage = ({ onLogin }) => {
 
     // ── Admin bypass (Local override for first-time setup or emergency) ──
     const ADMIN_EMAIL = 'vijayapandian112007@gmail.com';
-    if (!isRegister && email.toLowerCase() === ADMIN_EMAIL && password === '1234567890') {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!isRegister && cleanEmail === ADMIN_EMAIL && password === '1234567890') {
       const adminUser = { id: 0, name: 'Vijayapandian (Admin)', email: ADMIN_EMAIL, role: 'ADMIN' };
       notifyAdmin('Admin Login (Local Bypass)', adminUser);
       recordSession(adminUser);
       onLogin(adminUser);
+      return;
+    }
+
+    // ── Student/User Mock Bypass for easy testing/demo ──
+    const MOCK_STUDENTS = ['user@gmail.com', 'vijayapandiant@gmail.com', 'vijayapandiant07@gmail.com'];
+    if (!isRegister && MOCK_STUDENTS.includes(cleanEmail) && password.length >= 4) {
+      const mockUser = {
+        id: cleanEmail === 'user@gmail.com' ? 99999 : 99998,
+        name: cleanEmail === 'user@gmail.com' ? 'Demo Student' : 'Vijayapandian',
+        email: cleanEmail,
+        role: 'STUDENT'
+      };
+
+      // Store in local users so it can be auto-synced to the backend database
+      const allUsers = getStoredUsers();
+      if (!allUsers.some(u => u.email.toLowerCase() === cleanEmail)) {
+        allUsers.push({ id: mockUser.id, name: mockUser.name, email: cleanEmail, password: password, role: 'STUDENT' });
+        localStorage.setItem('exam_users', JSON.stringify(allUsers));
+      }
+
+      notifyAdmin('Student Login (Mock Bypass)', mockUser);
+      recordSession(mockUser);
+      onLogin(mockUser);
       return;
     }
 
