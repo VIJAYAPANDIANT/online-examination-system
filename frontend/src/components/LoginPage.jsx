@@ -133,7 +133,20 @@ const LoginPage = ({ onLogin }) => {
         return handleLocalAuth();
       }
 
-      const data = await response.json();
+      // Check content-type to confirm it's JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('Backend returned non-JSON response (likely HTML proxy error). Falling back to local storage.');
+        return handleLocalAuth();
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.warn('Failed to parse backend JSON response. Falling back to local storage.');
+        return handleLocalAuth();
+      }
 
       if (!response.ok) {
         // If the backend doesn't recognize the user, check if they registered while offline
