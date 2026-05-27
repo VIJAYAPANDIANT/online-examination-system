@@ -19,8 +19,80 @@ const AdminDashboard = ({ user, onLogout }) => {
     topicCategory: 'JAVA' 
   });
 
+  const syncLocalDataToBackend = async () => {
+    try {
+      const storedUsers = JSON.parse(localStorage.getItem('exam_users') || '[]');
+      if (storedUsers.length === 0) return;
+
+      for (const localUser of storedUsers) {
+        let dbId = null;
+        try {
+          const regRes = await axios.post('/api/auth/register', {
+            name: localUser.name,
+            email: localUser.email.toLowerCase(),
+            password: localUser.password
+          });
+          dbId = regRes.data.id;
+        } catch (err) {
+          if (err.response && err.response.status === 400) {
+            try {
+              const loginRes = await axios.post('/api/auth/login', {
+                email: localUser.email.toLowerCase(),
+                password: localUser.password
+              });
+              dbId = loginRes.data.id;
+            } catch (loginErr) {
+              console.error(loginErr);
+            }
+          }
+        }
+
+        if (dbId) {
+          const localResultsKeys = [`examResults_${localUser.id}`, `examResults_${dbId}`];
+          for (const key of localResultsKeys) {
+            const localResults = JSON.parse(localStorage.getItem(key) || '[]');
+            if (localResults.length > 0) {
+              let syncedCount = 0;
+              for (const res of localResults) {
+                if (res.synced) continue;
+                try {
+                  await axios.post('/api/exam/submit', {
+                    studentId: dbId,
+                    questionId: res.questionId,
+                    selectedOption: res.selected
+                  });
+                  res.synced = true;
+                  syncedCount++;
+                } catch (submitErr) {
+                  if (submitErr.response && submitErr.response.status === 400) {
+                    res.synced = true;
+                    syncedCount++;
+                  } else {
+                    break;
+                  }
+                }
+              }
+              if (syncedCount > 0) {
+                localStorage.setItem(`examResults_${dbId}`, JSON.stringify(localResults));
+                if (key !== `examResults_${dbId}`) {
+                  localStorage.removeItem(key);
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (syncErr) {
+      console.warn("Auto-sync error:", syncErr);
+    }
+  };
+
   useEffect(() => {
-    fetchData();
+    const init = async () => {
+      await syncLocalDataToBackend();
+      fetchData();
+    };
+    init();
   }, []);
 
   const fetchData = async () => {
