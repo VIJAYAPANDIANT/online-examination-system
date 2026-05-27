@@ -39,14 +39,22 @@
 
 ---
 
-## 🔐 Demo Credentials
+## 🔐 Demo Credentials & Testing Bypasses
 
-For testing purposes, you can use the following credentials to access different portals of the platform:
+For testing, demoing, and local development, the platform supports both standard credentials and built-in bypasses:
 
-| Role          | Email                           | Password     |
-| :------------ | :------------------------------ | :----------- |
-| **Admin**     | `vijayapandian112007@gmail.com` | `1234567890` |
-| **Test User** | `vijayapandiant07@gmail.com`    | `12345`      |
+### Standard Admin Credentials
+Use this account to access the **Administrator Dashboard**:
+- **Email:** `vijayapandian112007@gmail.com`
+- **Password:** `1234567890`
+
+### Mock Student Bypass
+To facilitate easy testing and multi-student demos without prior registration, any of the following emails logged in with a password of **at least 4 characters** will trigger a mock student bypass:
+- `user@gmail.com`
+- `vijayapandiant@gmail.com`
+- `vijayapandiant07@gmail.com`
+
+*Note: Mock logins register the student locally in localStorage first, and automatically sync their profiles and test submissions to the backend database once connected (see [Offline Auto-Sync](#-advanced--demo-features) below).*
 
 ---
 
@@ -157,11 +165,13 @@ Online-Examination-System/
 
 ---
 
-## ⚙️ Advanced Features
+## ⚙️ Advanced & Demo Features
 
 - **Asynchronous Processing:** RabbitMQ manages high-volume submission queues.
 - **Real-time Leaderboard:** Redis-powered cache for instant global rankings.
 - **Security:** Server-side integrity validation and JWT-based authentication.
+- **🔌 Dynamic Connection Settings:** An expandable "Connection Settings" panel (⚙️) on the login screen allows developers and testers to customize the backend API server URL (e.g., `http://192.168.1.15:8080`). If left blank, it auto-detects whether the app is running on `localhost` or a local IP (e.g. `192.168.x.x`) to seamlessly route API requests to port `8080` without container rebuilding.
+- **🔄 Offline Local Storage Auto-Sync:** Designed to handle transient network issues or offline demo scenarios. Any mock student registrations or exam submissions made while disconnected are securely cached in `localStorage` and automatically synchronized to the MySQL database once the student mounts their dashboard with a live connection.
 
 ---
 
