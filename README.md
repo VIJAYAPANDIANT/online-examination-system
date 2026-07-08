@@ -3,7 +3,7 @@
 <div align="center">
   <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge" alt="Maintained">
-  <img src="https://img.shields.io/github/license/VIJAYAPANDIANT/online-examination-system?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?style=for-the-badge&logo=springboot" alt="Spring Boot">
   <img src="https://img.shields.io/badge/React-20232a?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
   <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel">
