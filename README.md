@@ -3,7 +3,7 @@
 <div align="center">
   <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge" alt="Status">
   <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge" alt="Maintained">
-  <img src="https://img.shields.io/github/license/VIJAYAPANDIANT/Online-Examination-System?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/github/license/VIJAYAPANDIANT/online-examination-system?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?style=for-the-badge&logo=springboot" alt="Spring Boot">
   <img src="https://img.shields.io/badge/React-20232a?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
   <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel">
@@ -17,7 +17,7 @@
   ·
   <a href="#-getting-started">Explore the Docs</a>
   ·
-  <a href="https://github.com/VIJAYAPANDIANT/Online-Examination-System/issues">Report Bug</a>
+  <a href="https://github.com/VIJAYAPANDIANT/online-examination-system/issues">Report Bug</a>
 </p>
 
 ---
@@ -125,7 +125,7 @@ Maintains integrity through a point-based violation tracking system:
 ## 📂 Project Structure
 
 ```bash
-Online-Examination-System/
+online-examination-system/
 ├── backend/            # Spring Boot Microservice
 │   ├── src/            # Application logic
 │   ├── pom.xml         # Dependency management
@@ -149,11 +149,11 @@ Online-Examination-System/
 ### Installation & Setup
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/VIJAYAPANDIANT/Online-Examination-System.git
+   git clone https://github.com/VIJAYAPANDIANT/online-examination-system.git
    ```
 2. **Navigate to the root folder:**
    ```bash
-   cd Online-Examination-System
+   cd online-examination-system
    ```
 3. **Launch the stack:**
    ```bash
