@@ -46,7 +46,6 @@ services:
       - SPRING_REDIS_PORT=6379
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_AUTOCONFIGURE_EXCLUDE=
     ports:
       - "8080:8080"
     depends_on:
